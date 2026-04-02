@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESG Dashboard – BC Centre of Excellence</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <svg class="bc-logo" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" aria-label="BC Government Logo">
+          <circle cx="30" cy="30" r="30" fill="#003366"/>
+          <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
+                font-family="Arial" font-size="18" font-weight="bold" fill="#FCBA19">BC</text>
+        </svg>
+        <div class="brand-text">
+          <span class="brand-province">Province of British Columbia</span>
+          <span class="brand-title">ESG Centre of Excellence</span>
+        </div>
+      </div>
+      <nav class="top-nav" role="navigation" aria-label="Main navigation">
+        <button class="nav-btn active" data-tab="summary">Summary</button>
+        <button class="nav-btn" data-tab="environment">Environment</button>
+        <button class="nav-btn" data-tab="social">Social</button>
+        <button class="nav-btn" data-tab="about">About</button>
+      </nav>
+    </div>
+    <div class="gold-bar"></div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main-layout">
+
+    <!-- ========== SUMMARY TAB ========== -->
+    <section id="tab-summary" class="tab-content active">
+      <div class="page-intro">
+        <h1>ESG Performance Dashboard</h1>
+        <p>
+          This dashboard helps B.C. businesses understand and compare their Environmental,
+          Social, and Governance (ESG) performance against provincial and national benchmarks.
+          Use the tabs above to explore Environmental and Social indicators by industry.
+        </p>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card env">
+          <div class="card-icon">🌱</div>
+          <h2>Environment</h2>
+          <p>Track energy consumption and greenhouse gas (GHG) emissions across B.C. industries. Compare against national benchmarks per employee.</p>
+          <button class="card-btn" data-tab="environment">Explore Environment →</button>
+        </div>
+        <div class="summary-card soc">
+          <div class="card-icon">👥</div>
+          <h2>Social</h2>
+          <p>Analyse workforce demographics, wage equity, gender diversity, and board representation across Canadian industries.</p>
+          <button class="card-btn" data-tab="social">Explore Social →</button>
+        </div>
+        <div class="summary-card gov">
+          <div class="card-icon">📋</div>
+          <h2>Governance</h2>
+          <p>Governance indicators are under development. Coming soon: board composition, audit practices, and transparency metrics.</p>
+          <button class="card-btn" disabled>Coming Soon</button>
+        </div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi">
+          <span class="kpi-value">13</span>
+          <span class="kpi-label">Data Sets</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-value">4+</span>
+          <span class="kpi-label">Industries</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-value">10+</span>
+          <span class="kpi-label">Years of Data</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-value">2</span>
+          <span class="kpi-label">ESG Pillars</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ENVIRONMENT TAB ========== -->
+    <section id="tab-environment" class="tab-content">
+      <div class="tab-header">
+        <h1>Environmental Indicators</h1>
+        <p>Energy use and greenhouse gas emissions by B.C. industry sector, sourced from Natural Resources Canada.</p>
+      </div>
+
+      <div class="content-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="filter-panel">
+            <h3>Filters</h3>
+            <label for="env-region">Region</label>
+            <select id="env-region">
+              <option value="BC">British Columbia</option>
+              <option value="Canada">Canada (National)</option>
+            </select>
+
+            <label for="env-metric">Metric</label>
+            <select id="env-metric">
+              <option value="total">Total</option>
+              <option value="shares">Shares (%)</option>
+            </select>
+
+            <label for="env-variable">Variable</label>
+            <select id="env-variable">
+              <option value="industry">By Industry</option>
+              <option value="source">By Energy Source</option>
+            </select>
+          </div>
+          <div class="sidebar-note">
+            <strong>Data Source:</strong><br/>
+            Natural Resources Canada – Energy Use Data Handbook.<br/><br/>
+            Units are expressed per employee (GJ/employee for energy, tCO₂e/employee for GHG).
+          </div>
+        </aside>
+
+        <!-- Charts area -->
+        <div class="charts-area">
+          <!-- Energy Use -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Energy Use by Industry</h2>
+              <span class="unit-badge">GJ / employee</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="energyByIndustryChart"></canvas>
+            </div>
+          </div>
+
+          <!-- GHG Emissions -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>GHG Emissions by Industry</h2>
+              <span class="unit-badge">tCO₂e / employee</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="ghgByIndustryChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Energy by Source -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Energy Use by Source</h2>
+              <span class="unit-badge">Share (%)</span>
+            </div>
+            <div class="chart-wrap half-height">
+              <canvas id="energyBySourceChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Data Table -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Industry Summary Table</h2>
+              <button class="dl-btn" id="downloadEnvCSV">⬇ Download CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table id="envTable" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Industry</th>
+                    <th>Year</th>
+                    <th>Energy Use (GJ/emp)</th>
+                    <th>GHG Emissions (tCO₂e/emp)</th>
+                    <th>Region</th>
+                  </tr>
+                </thead>
+                <tbody id="envTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SOCIAL TAB ========== -->
+    <section id="tab-social" class="tab-content">
+      <div class="tab-header">
+        <h1>Social Indicators</h1>
+        <p>Workforce demographics, wage equity, and diversity metrics, sourced from Statistics Canada.</p>
+      </div>
+
+      <div class="content-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="filter-panel">
+            <h3>Filters</h3>
+            <label for="soc-industry">Industry</label>
+            <select id="soc-industry">
+              <option value="all">Total, all industries</option>
+              <option value="manufacturing">Manufacturing</option>
+              <option value="mining">Mining, Oil &amp; Gas</option>
+              <option value="forestry">Forestry</option>
+              <option value="construction">Construction</option>
+            </select>
+
+            <label for="soc-region">Region</label>
+            <select id="soc-region">
+              <option value="Canada">Canada</option>
+              <option value="BC">British Columbia</option>
+            </select>
+          </div>
+          <div class="sidebar-note">
+            <strong>Data Source:</strong><br/>
+            Statistics Canada – Labour Force Survey, Survey of Employment, Payrolls and Hours (SEPH).<br/><br/>
+            Gender categories use Statistics Canada's designations (Men+, Women+).
+          </div>
+        </aside>
+
+        <!-- Charts area -->
+        <div class="charts-area">
+          <!-- Employment by Age -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Employment by Age Group</h2>
+              <span class="unit-badge">% of workforce</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="employmentAgeChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Overtime Hours by Gender -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Mean Weekly Overtime Hours by Gender</h2>
+              <span class="unit-badge">hours / week</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="overtimeGenderChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Wage Representation -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Representation of Women by Compensation Level</h2>
+              <span class="unit-badge">% of employees</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="wageRepChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Work Absences -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Work Absences by Gender</h2>
+              <span class="unit-badge">days / year</span>
+            </div>
+            <div class="chart-wrap half-height">
+              <canvas id="workAbsenceChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Social Data Table -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Social Indicators Summary Table</h2>
+              <button class="dl-btn" id="downloadSocCSV">⬇ Download CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table id="socTable" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Group</th>
+                    <th>Year</th>
+                    <th>Value</th>
+                    <th>Unit</th>
+                  </tr>
+                </thead>
+                <tbody id="socTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ABOUT TAB ========== -->
+    <section id="tab-about" class="tab-content">
+      <div class="about-layout">
+        <h1>About This Dashboard</h1>
+        <p>
+          This dashboard is maintained by the <strong>BC ESG Centre of Excellence</strong>, Province of British Columbia.
+          It is inspired by and based on the open-source
+          <a href="https://github.com/bcgov/esg-dashboard" target="_blank" rel="noopener">bcgov/esg-dashboard</a>
+          project, licensed under the Apache 2.0 License.
+        </p>
+
+        <h2>Data Sources</h2>
+        <div class="sources-grid">
+          <div class="source-card">
+            <h3>🌿 Environmental</h3>
+            <table class="data-table">
+              <thead><tr><th>Indicator</th><th>Source</th><th>Table / File</th></tr></thead>
+              <tbody>
+                <tr><td>Industrial energy use</td><td>Natural Resources Canada</td><td>Energy Use Data Handbook</td></tr>
+                <tr><td>Industrial GHG emissions</td><td>Natural Resources Canada</td><td>Energy Use Data Handbook</td></tr>
+                <tr><td>Agricultural energy use</td><td>Natural Resources Canada</td><td>Energy Use Data Handbook</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="source-card">
+            <h3>👥 Social</h3>
+            <table class="data-table">
+              <thead><tr><th>Indicator</th><th>Source</th><th>Table</th></tr></thead>
+              <tbody>
+                <tr><td>Employment by age group</td><td>Statistics Canada</td><td>14-10-0023-01</td></tr>
+                <tr><td>Overtime hours by gender</td><td>Statistics Canada</td><td>14-10-0190-01</td></tr>
+                <tr><td>Women by wage level</td><td>Statistics Canada</td><td>14-10-0064-01</td></tr>
+                <tr><td>Work absences</td><td>Statistics Canada</td><td>14-10-0190-01</td></tr>
+                <tr><td>Union coverage</td><td>Statistics Canada</td><td>14-10-0132-01</td></tr>
+                <tr><td>Board representation</td><td>Statistics Canada</td><td>33-10-0228-01</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <h2>Methodology Notes</h2>
+        <ul class="about-list">
+          <li>Energy and GHG values are normalised per employee to allow cross-industry comparison.</li>
+          <li>Gender categories (Men+, Women+) follow Statistics Canada's standard designations.</li>
+          <li>All dollar values are in nominal Canadian dollars unless otherwise stated.</li>
+          <li>Industry classifications follow the North American Industry Classification System (NAICS).</li>
+        </ul>
+
+        <h2>Licence</h2>
+        <p>
+          This project is licensed under the
+          <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License, Version 2.0</a>.
+          Copyright © 2025 Province of British Columbia.
+        </p>
+
+        <h2>Feedback &amp; Contributions</h2>
+        <p>
+          Issues and contributions are welcome via
+          <a href="https://github.com/bcgov/esg-dashboard" target="_blank" rel="noopener">GitHub</a>.
+          Please review the
+          <a href="https://github.com/bcgov/esg-dashboard/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing Guidelines</a>
+          before opening a pull request.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>© 2025 Province of British Columbia &nbsp;|&nbsp; ESG Centre of Excellence</p>
+      <p>Data sourced from Natural Resources Canada and Statistics Canada. Licensed under Apache 2.0.</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="charts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
