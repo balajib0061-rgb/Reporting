@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grey Ammonia Production Dashboard</title>
+  <link rel="stylesheet" href="ammonia.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">⚗️</div>
+        <div class="brand-text">
+          <span class="brand-sub">Ammonia Production – Recip Unit</span>
+          <span class="brand-name">Grey Ammonia Dashboard</span>
+        </div>
+      </div>
+      <nav class="top-nav" role="navigation">
+        <button class="nav-btn active" data-tab="production">Production</button>
+        <button class="nav-btn" data-tab="energy">Energy</button>
+        <button class="nav-btn" data-tab="emissions">Emissions</button>
+        <button class="nav-btn" data-tab="compressor">Compressor Health</button>
+        <button class="nav-btn" data-tab="datatable">Data Table</button>
+      </nav>
+      <a href="index.html" class="header-back">← ESG Dashboard</a>
+    </div>
+    <div class="orange-bar"></div>
+  </header>
+
+  <!-- ===== KPI STRIP ===== -->
+  <div class="kpi-strip">
+    <div class="kpi-strip-inner">
+      <div class="kpi-item">
+        <span class="kpi-label">Avg Daily Production</span>
+        <span class="kpi-value" id="kpiProd">—</span>
+        <span class="kpi-unit">MT / day</span>
+      </div>
+      <div class="kpi-divider"></div>
+      <div class="kpi-item">
+        <span class="kpi-label">Capacity Utilization</span>
+        <span class="kpi-value" id="kpiCap">—</span>
+        <span class="kpi-unit">% of design</span>
+      </div>
+      <div class="kpi-divider"></div>
+      <div class="kpi-item">
+        <span class="kpi-label">Energy Intensity</span>
+        <span class="kpi-value" id="kpiEnergy">—</span>
+        <span class="kpi-unit">GJ / MT NH₃</span>
+      </div>
+      <div class="kpi-divider"></div>
+      <div class="kpi-item">
+        <span class="kpi-label">CO₂ Intensity</span>
+        <span class="kpi-value" id="kpiCO2">—</span>
+        <span class="kpi-unit">tCO₂ / MT NH₃</span>
+      </div>
+      <div class="kpi-divider"></div>
+      <div class="kpi-item">
+        <span class="kpi-label">Annual Production</span>
+        <span class="kpi-value" id="kpiTotal">—</span>
+        <span class="kpi-unit">MT / year</span>
+      </div>
+      <div class="kpi-divider"></div>
+      <div class="kpi-item">
+        <span class="kpi-label">Compressor Status</span>
+        <div class="kpi-status-wrap" id="kpiStatus">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN ===== -->
+  <main>
+
+    <!-- ========== TAB 1: PRODUCTION ========== -->
+    <section id="tab-production" class="tab-content active">
+      <div class="tab-header">
+        <h1>Production Overview</h1>
+        <p>Daily NH₃ output, monthly performance vs. target, and capacity utilization — 2024.</p>
+      </div>
+      <div class="content-layout">
+        <aside class="sidebar">
+          <div class="filter-panel">
+            <h3>Filters</h3>
+            <label for="prod-month">Month</label>
+            <select id="prod-month">
+              <option value="all">All Year</option>
+              <option>Jan</option><option>Feb</option><option>Mar</option>
+              <option>Apr</option><option>May</option><option>Jun</option>
+              <option>Jul</option><option>Aug</option><option>Sep</option>
+              <option>Oct</option><option>Nov</option><option>Dec</option>
+            </select>
+          </div>
+          <div class="sidebar-note">
+            <strong>Design Capacity:</strong> 518 MT/day<br/><br/>
+            <strong>Process:</strong> Steam Methane Reforming (SMR) + Haber–Bosch synthesis loop.<br/><br/>
+            <strong>Compressor:</strong> Reciprocating type, synthesis gas service.
+          </div>
+        </aside>
+        <div class="charts-area">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Daily NH₃ Production</h2>
+              <span class="unit-badge">MT / day</span>
+            </div>
+            <div class="chart-wrap tall"><canvas id="prodDailyChart"></canvas></div>
+          </div>
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h2>Monthly Production vs. Target</h2>
+                <span class="unit-badge">MT / month</span>
+              </div>
+              <div class="chart-wrap"><canvas id="prodMonthlyChart"></canvas></div>
+            </div>
+            <div class="chart-card gauge-card">
+              <div class="chart-card-header">
+                <h2>Capacity Utilization</h2>
+                <span class="unit-badge">avg 2024</span>
+              </div>
+              <div class="chart-wrap small"><canvas id="capGaugeChart"></canvas></div>
+              <div class="gauge-label" id="gaugeLabel">—%</div>
+              <div class="gauge-sub">of design capacity (518 MT/day)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== TAB 2: ENERGY ========== -->
+    <section id="tab-energy" class="tab-content">
+      <div class="tab-header">
+        <h1>Energy Consumption</h1>
+        <p>Natural gas, steam, and power consumption by month with energy intensity trend.</p>
+      </div>
+      <div class="content-layout">
+        <aside class="sidebar">
+          <div class="filter-panel">
+            <h3>Filters</h3>
+            <label for="energy-view">View</label>
+            <select id="energy-view">
+              <option value="monthly">Monthly</option>
+              <option value="cumulative">Cumulative YTD</option>
+            </select>
+          </div>
+          <div class="sidebar-note">
+            <strong>Energy sources:</strong><br/>
+            Natural Gas (~85%), Steam (~10%), Electricity (~5%).<br/><br/>
+            Benchmark: 9.0–9.5 GJ/MT NH₃ for SMR-based plants.
+          </div>
+        </aside>
+        <div class="charts-area">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Energy Intensity Trend</h2>
+              <span class="unit-badge">GJ / MT NH₃</span>
+            </div>
+            <div class="chart-wrap"><canvas id="energyIntChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Energy Breakdown by Source</h2>
+              <span class="unit-badge">MMBTU / month</span>
+            </div>
+            <div class="chart-wrap tall"><canvas id="energyBreakChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== TAB 3: EMISSIONS ========== -->
+    <section id="tab-emissions" class="tab-content">
+      <div class="tab-header">
+        <h1>GHG Emissions</h1>
+        <p>CO₂ emissions by month, intensity trend, and emission source breakdown.</p>
+      </div>
+      <div class="content-layout">
+        <aside class="sidebar">
+          <div class="filter-panel">
+            <h3>Filters</h3>
+            <label for="em-scope">Scope</label>
+            <select id="em-scope">
+              <option>Scope 1 (Direct)</option>
+              <option>Scope 1 + 2</option>
+            </select>
+          </div>
+          <div class="sidebar-note">
+            <strong>Grey Ammonia</strong> CO₂ intensity: ~1.8–2.0 tCO₂/MT NH₃.<br/><br/>
+            <strong>Green Ammonia</strong> target: &lt;0.5 tCO₂/MT NH₃.<br/><br/>
+            Source: IEA Ammonia Technology Roadmap 2021.
+          </div>
+        </aside>
+        <div class="charts-area">
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h2>Monthly CO₂ Emissions</h2>
+                <span class="unit-badge">MT CO₂ / month</span>
+              </div>
+              <div class="chart-wrap"><canvas id="co2TrendChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h2>CO₂ Intensity by Month</h2>
+                <span class="unit-badge">tCO₂ / MT NH₃</span>
+              </div>
+              <div class="chart-wrap"><canvas id="co2IntChart"></canvas></div>
+            </div>
+          </div>
+          <div class="chart-card" style="max-width:480px">
+            <div class="chart-card-header">
+              <h2>Emission Source Breakdown</h2>
+              <span class="unit-badge">% share</span>
+            </div>
+            <div class="chart-wrap"><canvas id="emSrcChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== TAB 4: COMPRESSOR HEALTH ========== -->
+    <section id="tab-compressor" class="tab-content">
+      <div class="tab-header">
+        <h1>Compressor Health Monitoring</h1>
+        <p>Reciprocating compressor KPIs — pressure, temperature, vibration, and lube oil.</p>
+      </div>
+
+      <!-- Status badges row -->
+      <div class="comp-status-row" id="compStatusRow"></div>
+
+      <div class="content-layout">
+        <aside class="sidebar">
+          <div class="filter-panel">
+            <h3>Thresholds</h3>
+            <label>Vibration Fault</label>
+            <input type="text" value="7.1 mm/s" readonly />
+            <label>Vibration Warning</label>
+            <input type="text" value="5.6 mm/s" readonly />
+            <label>Min Lube Oil Press.</label>
+            <input type="text" value="2.8 bar" readonly />
+          </div>
+          <div class="sidebar-note">
+            <strong>Compressor type:</strong> Reciprocating (Recip)<br/><br/>
+            <strong>Service:</strong> Synthesis gas / ammonia loop<br/><br/>
+            Anomalies detected around <strong>May 23–27</strong> and <strong>Oct 5–9</strong>. Inspect valve and piston rod condition.
+          </div>
+        </aside>
+        <div class="charts-area">
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h2>Suction vs. Discharge Pressure</h2>
+                <span class="unit-badge">bar</span>
+              </div>
+              <div class="chart-wrap"><canvas id="pressureChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h2>Suction vs. Discharge Temperature</h2>
+                <span class="unit-badge">°C</span>
+              </div>
+              <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Vibration Level</h2>
+              <span class="unit-badge">mm/s — fault threshold: 7.1</span>
+            </div>
+            <div class="chart-wrap tall"><canvas id="vibChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Lube Oil Pressure</h2>
+              <span class="unit-badge">bar — min threshold: 2.8</span>
+            </div>
+            <div class="chart-wrap"><canvas id="lubChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== TAB 5: DATA TABLE ========== -->
+    <section id="tab-datatable" class="tab-content">
+      <div class="tab-header">
+        <h1>Daily Data Table</h1>
+        <p>Full 2024 daily dataset — search by date range, export to CSV.</p>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h2>Daily Records</h2>
+          <button class="dl-btn" id="downloadCSV">⬇ Download CSV</button>
+        </div>
+        <div class="search-row">
+          <div>
+            <label for="dateFrom">From</label><br/>
+            <input type="date" id="dateFrom" value="2024-01-01" />
+          </div>
+          <div>
+            <label for="dateTo">To</label><br/>
+            <input type="date" id="dateTo" value="2024-12-31" />
+          </div>
+          <button class="search-btn" id="applyFilter">Apply</button>
+          <button class="search-btn" id="resetFilter" style="background:#607d8b">Reset</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Production (MT)</th>
+                <th>Capacity (%)</th>
+                <th>NG Consumption (MMBTU)</th>
+                <th>Energy Intensity (GJ/MT)</th>
+                <th>CO₂ (MT)</th>
+                <th>CO₂ Intensity (tCO₂/MT)</th>
+                <th>Suction P (bar)</th>
+                <th>Discharge P (bar)</th>
+                <th>Vibration (mm/s)</th>
+                <th>Lube Oil P (bar)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <button class="page-btn" id="prevPage">← Prev</button>
+          <span id="pageInfo">Page 1 of 1</span>
+          <button class="page-btn" id="nextPage">Next →</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>Grey Ammonia Production Dashboard — Recip Unit | Data Year: 2024</span>
+      <span>Indicative data based on SMR industry benchmarks | Chart.js 4.x</span>
+    </div>
+  </footer>
+
+  <script src="ammonia_data.js"></script>
+  <script src="ammonia_charts.js"></script>
+  <script src="ammonia_app.js"></script>
+</body>
+</html>
