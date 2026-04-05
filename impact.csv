@@ -1,0 +1,23 @@
+Impact category UUID;Impact category;Reference unit;Result
+656f9cd8-2316-3c03-9ecb-451fe5d36f98;Fine particulate matter formation;DALY;0,000858735
+a531306f-c0ef-3ede-8ef0-190982e8512c;Fossil resource scarcity;USD2013;303,5352501
+b5d8a3d7-1fe2-3e4b-be56-8e5aa8a81ca8;Freshwater ecotoxicity;species.yr;7,35995E-09
+63a32d8f-5f08-3a8e-a44a-6ae63a95ea9f;Freshwater eutrophication;species.yr;2,1731E-07
+ccb7945c-5f4c-3a19-870b-111c0d19c19e;Global warming, Freshwater ecosystems;species.yr;2,31299E-10
+0b66e474-0300-3c49-aa93-f88f26222ec3;Global warming, Human health;DALY;0,002806225
+87c323f8-110b-3e8e-bdae-ad61283728f4;Global warming, Terrestrial ecosystems;species.yr;8,46637E-06
+0d2447fa-4c3d-35d3-b133-9da6d33f6dae;Human carcinogenic toxicity;DALY;6,11595E-05
+e971652b-97fa-3c7b-9a74-6e6bc4b90d8f;Human non-carcinogenic toxicity;DALY;0,00012304
+070a1469-e952-339b-b0e0-c1f7f31fe56b;Ionizing radiation;DALY;2,39132E-06
+4ffc08f3-23c1-32a2-8e43-3bc3f95f1434;Land use;species.yr;1,35896E-07
+a6371f3f-6f95-32ac-9082-b85dd201e999;Marine ecotoxicity;species.yr;1,61212E-09
+cd715643-4319-331d-976d-30ba56854475;Marine eutrophication;species.yr;7,11983E-11
+766da352-c0c5-378c-9a08-af9bbb5fe0fa;Mineral resource scarcity;USD2013;0,169205479
+68a4e642-4b9a-35c4-95a0-89df42336ffa;Ozone formation, Human health;DALY;1,66118E-06
+2b0a4828-6d95-360e-ad2a-2c2b90c05d40;Ozone formation, Terrestrial ecosystems;species.yr;2,42618E-07
+75025f52-0ab5-3623-8dc7-4b09fa2fab38;Stratospheric ozone depletion;DALY;1,51154E-07
+bea0b2b0-4fc1-310b-8a6f-60ad1c11694f;Terrestrial acidification;species.yr;9,66853E-07
+0097a24d-77ab-3589-be6b-2be73cfa8947;Terrestrial ecotoxicity;species.yr;1,09857E-08
+eb55767b-3579-3f38-b4ca-dce1f2d1bbbc;Water consumption, Aquatic ecosystems;species.yr;2,08686E-09
+b75d0d88-1e43-372d-8502-996702b7f7d9;Water consumption, Human health;DALY;0,007669914
+b1dfcc48-741a-3860-a938-a2af06ec1c92;Water consumption, Terrestrial ecosystem;species.yr;4,66414E-05
