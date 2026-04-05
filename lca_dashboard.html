@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cradle-to-Gate LCA – Ammonia Pathways</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Google Charts (for Sankey) -->
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --grey:#6b7280;--grey-dark:#374151;
+      --blue:#2563eb;--blue-light:#dbeafe;
+      --green:#16a34a;--green-light:#dcfce7;
+      --dark:#1e293b;--bg:#f1f5f9;--white:#ffffff;
+      --border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+      --radius:12px;--shadow:0 2px 12px rgba(0,0,0,0.08);
+      --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
+      --font:'Segoe UI',Arial,sans-serif;
+    }
+    html{font-size:16px;scroll-behavior:smooth}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ===== HEADER ===== */
+    .site-header{
+      background:var(--dark);
+      padding:2rem 1.5rem;
+      text-align:center;
+    }
+    .site-header h1{
+      color:#fff;font-size:clamp(1.3rem,3vw,2rem);
+      font-weight:700;letter-spacing:0.01em;
+    }
+
+    /* ===== MAIN ===== */
+    main{max-width:1300px;margin:0 auto;padding:2rem 1.5rem}
+
+    /* ===== ASSESSMENT + PATHWAY CARDS ===== */
+    .intro-grid{
+      display:grid;
+      grid-template-columns:280px 1fr 1fr 1fr;
+      gap:1.25rem;
+      margin-bottom:2.5rem;
+    }
+    .assess-card{
+      background:var(--white);border-radius:var(--radius);
+      padding:1.5rem;box-shadow:var(--shadow);
+    }
+    .assess-card h3{
+      font-size:1rem;font-weight:700;color:var(--text);
+      border-bottom:2px solid var(--border);padding-bottom:0.6rem;margin-bottom:1rem;
+    }
+    .assess-row{display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
+    .assess-row:last-child{border-bottom:none}
+    .assess-label{color:var(--muted);font-weight:500}
+    .assess-val{color:var(--text);font-weight:600;text-align:right}
+
+    .pathway-card{
+      background:var(--white);border-radius:var(--radius);
+      padding:1.5rem 1.25rem;box-shadow:var(--shadow);
+      display:flex;flex-direction:column;align-items:center;
+      gap:0.75rem;text-align:center;
+      border-top:5px solid var(--border);
+    }
+    .pathway-card.grey-card{border-top-color:#6b7280}
+    .pathway-card.blue-card{border-top-color:#2563eb}
+    .pathway-card.green-card{border-top-color:#16a34a}
+
+    .pathway-title{font-size:1.15rem;font-weight:700}
+    .grey-card .pathway-title{color:#6b7280}
+    .blue-card  .pathway-title{color:#2563eb}
+    .green-card .pathway-title{color:#16a34a}
+
+    .pathway-sub{font-size:0.82rem;color:var(--muted)}
+
+    .carbon-badge{
+      padding:0.35rem 1.1rem;border-radius:20px;
+      font-size:0.8rem;font-weight:700;color:#fff;
+    }
+    .badge-grey {background:#6b7280}
+    .badge-blue {background:#2563eb}
+    .badge-green{background:#16a34a}
+
+    .pathway-desc{font-size:0.82rem;color:var(--muted);line-height:1.55}
+
+    /* ===== SECTION TITLES ===== */
+    .section-title{
+      font-size:1.1rem;font-weight:700;color:var(--dark);
+      margin-bottom:1rem;padding-left:0.75rem;
+      border-left:4px solid #2563eb;
+    }
+
+    /* ===== CHART CARDS ===== */
+    .chart-card{
+      background:var(--white);border-radius:var(--radius);
+      box-shadow:var(--shadow);padding:1.5rem;margin-bottom:1.5rem;
+    }
+    .chart-card h2{
+      font-size:0.95rem;font-weight:700;color:var(--dark);
+      margin-bottom:0.35rem;
+    }
+    .chart-subtitle{font-size:0.78rem;color:var(--muted);margin-bottom:1rem}
+    .chart-wrap{position:relative;width:100%}
+    .chart-wrap.h300{height:300px}
+    .chart-wrap.h350{height:350px}
+    .chart-wrap.h400{height:400px}
+    .chart-wrap.h450{height:450px}
+
+    .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+
+    /* ===== SANKEY ===== */
+    #sankeyChart{width:100%;height:420px}
+
+    /* ===== LEGEND NOTE ===== */
+    .legend-note{
+      display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.75rem;
+      padding:0.75rem 1rem;background:var(--bg);border-radius:8px;
+      font-size:0.78rem;color:var(--muted);
+    }
+    .legend-dot{
+      display:inline-block;width:10px;height:10px;
+      border-radius:50%;margin-right:4px;vertical-align:middle;
+    }
+
+    /* ===== FOOTER ===== */
+    footer{
+      text-align:center;padding:1.5rem;font-size:0.78rem;
+      color:var(--muted);border-top:1px solid var(--border);margin-top:2rem;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media(max-width:960px){
+      .intro-grid{grid-template-columns:1fr 1fr}
+      .assess-card{grid-column:1/-1}
+      .charts-row{grid-template-columns:1fr}
+    }
+    @media(max-width:600px){
+      .intro-grid{grid-template-columns:1fr}
+      main{padding:1rem}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header">
+  <h1>Cradle-to-Gate LCA Comparison of Ammonia Production Pathways</h1>
+</header>
+
+<main>
+
+  <!-- ===== ASSESSMENT DETAILS + PATHWAY CARDS ===== -->
+  <div class="intro-grid">
+
+    <!-- Assessment Details -->
+    <div class="assess-card">
+      <h3>Assessment Details</h3>
+      <div class="assess-row"><span class="assess-label">Product</span><span class="assess-val">Ammonia Production</span></div>
+      <div class="assess-row"><span class="assess-label">Amount</span><span class="assess-val">1000.0 kg</span></div>
+      <div class="assess-row"><span class="assess-label">Method</span><span class="assess-val">ReCiPe 2016 (H)</span></div>
+      <div class="assess-row"><span class="assess-label">Norm/Weight</span><span class="assess-val">none</span></div>
+      <div class="assess-row"><span class="assess-label">Allocation</span><span class="assess-val">process defaults</span></div>
+      <div class="assess-row"><span class="assess-label">Cutoff</span><span class="assess-val">none</span></div>
+    </div>
+
+    <!-- Grey NH3 -->
+    <div class="pathway-card grey-card">
+      <div class="pathway-title">Grey NH₃</div>
+      <div class="pathway-sub">SMR, no CCS</div>
+      <span class="carbon-badge badge-grey">High Carbon</span>
+      <p class="pathway-desc">Standard production using Steam Methane Reforming without carbon capture.</p>
+    </div>
+
+    <!-- Blue NH3 -->
+    <div class="pathway-card blue-card">
+      <div class="pathway-title">Blue NH₃</div>
+      <div class="pathway-sub">SMR + CCS</div>
+      <span class="carbon-badge badge-blue">Low Carbon</span>
+      <p class="pathway-desc">Steam Methane Reforming with integrated Carbon Capture (90% efficiency).</p>
+    </div>
+
+    <!-- Green NH3 -->
+    <div class="pathway-card green-card">
+      <div class="pathway-title">Green NH₃</div>
+      <div class="pathway-sub">Electrolysis</div>
+      <span class="carbon-badge badge-green">Zero Carbon*</span>
+      <p class="pathway-desc">Ammonia produced via water electrolysis using renewable electricity.</p>
+    </div>
+
+  </div>
+
+  <!-- ===== CHART 1: TOTAL IMPACT BAR CHART ===== -->
+  <p class="section-title">Chart 1 — Total Endpoint Impact Score</p>
+  <div class="chart-card">
+    <h2>Total Impact Comparison (Single Score)</h2>
+    <p class="chart-subtitle">ReCiPe 2016 (H) — millipoints (mPt) per 1000 kg NH₃. Lower is better.</p>
+    <div class="chart-wrap h300"><canvas id="totalImpactChart"></canvas></div>
+    <div class="legend-note">
+      <span><span class="legend-dot" style="background:#6b7280"></span>Grey NH₃ — highest impact (no CCS)</span>
+      <span><span class="legend-dot" style="background:#2563eb"></span>Blue NH₃ — ~60% reduction vs Grey</span>
+      <span><span class="legend-dot" style="background:#16a34a"></span>Green NH₃ — ~89% reduction vs Grey</span>
+    </div>
+  </div>
+
+  <!-- ===== CHARTS 2 + 3: GROUPED + STACKED ===== -->
+  <div class="charts-row">
+
+    <!-- Chart 2: Grouped Bar by Endpoint Category -->
+    <div class="chart-card">
+      <h2>Chart 2 — Impact by Endpoint Category</h2>
+      <p class="chart-subtitle">Grouped bars: Human Health (DALY×10³), Ecosystems (sp.yr×10⁶), Resources (USD2013). Normalised.</p>
+      <div class="chart-wrap h350"><canvas id="groupedBarChart"></canvas></div>
+    </div>
+
+    <!-- Chart 3: Stacked Bar by Life-Cycle Stage -->
+    <div class="chart-card">
+      <h2>Chart 3 — CO₂ by Life-Cycle Stage</h2>
+      <p class="chart-subtitle">Stacked bars: Feedstock → Processing → Transport → End-of-Life. kg CO₂eq per 1000 kg NH₃.</p>
+      <div class="chart-wrap h350"><canvas id="stackedBarChart"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- ===== CHART 4: RADAR CHART ===== -->
+  <p class="section-title">Chart 4 — Midpoint Indicator Trade-offs</p>
+  <div class="chart-card">
+    <h2>Radar Chart — Midpoint Indicators (normalised 0–100)</h2>
+    <p class="chart-subtitle">Each axis shows relative impact (100 = worst case). Lower area = better overall performance.</p>
+    <div class="chart-wrap h450" style="max-width:700px;margin:0 auto"><canvas id="radarChart"></canvas></div>
+  </div>
+
+  <!-- ===== CHART 5: SANKEY DIAGRAM ===== -->
+  <p class="section-title">Chart 5 — Sankey: Cradle-to-Gate Process Flow</p>
+  <div class="chart-card">
+    <h2>Sankey Diagram — Energy & Emission Flows by Pathway</h2>
+    <p class="chart-subtitle">Conceptual flow: Raw materials → Production process → Ammonia output. Width ∝ CO₂eq contribution.</p>
+    <div id="sankeyChart"></div>
+    <div class="legend-note">
+      <span><span class="legend-dot" style="background:#6b7280"></span>Grey NH₃ flows</span>
+      <span><span class="legend-dot" style="background:#2563eb"></span>Blue NH₃ flows</span>
+      <span><span class="legend-dot" style="background:#16a34a"></span>Green NH₃ flows</span>
+      <span>* Flow widths proportional to GHG contribution (kg CO₂eq per 1000 kg NH₃)</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  LCA Method: ReCiPe 2016 (H) &nbsp;|&nbsp; Functional Unit: 1000 kg NH₃ &nbsp;|&nbsp;
+  System Boundary: Cradle-to-Gate &nbsp;|&nbsp; Data: Representative industry averages
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+/* ============================================================
+   LCA DATA
+   ReCiPe 2016 (H) — Representative values per 1000 kg NH3
+   ============================================================ */
+
+const CASES  = ["Grey NH₃", "Blue NH₃", "Green NH₃"];
+const COLORS = {
+  grey:  { border:"#6b7280", bg:"#6b728099" },
+  blue:  { border:"#2563eb", bg:"#2563eb99" },
+  green: { border:"#16a34a", bg:"#16a34a99" }
+};
+const C = [COLORS.grey, COLORS.blue, COLORS.green];
+
+// Shared tooltip style
+const TT = {
+  backgroundColor:"#1e293b",
+  titleColor:"#f8fafc",
+  bodyColor:"#cbd5e1",
+  padding:10, cornerRadius:6, boxPadding:4
+};
+
+/* --- Chart 1: Total single score (millipoints) --- */
+const totalScores = [850, 320, 95];
+
+/* --- Chart 2: Endpoint categories (normalised to max=100) --- */
+const endpointCategories  = ["Human Health\n(DALY×10³)", "Ecosystems\n(sp.yr×10⁶)", "Resources\n(USD2013)"];
+const endpointData = {
+  grey:  [100, 100, 100],
+  blue:  [ 37,  42,  37],
+  green: [ 11,  12,  10]
+};
+
+/* --- Chart 3: Life-cycle stages (kg CO2eq per 1000 kg NH3) --- */
+const stages      = ["Feedstock", "Processing", "Transport", "End-of-Life"];
+const stageData = {
+  grey:  [1800, 800, 200, 50],
+  blue:  [1200, 280, 195, 45],
+  green: [  60,  55,  35,  8]
+};
+
+/* --- Chart 4: Midpoint indicators (0–100 normalised) --- */
+const midpoints = [
+  "Climate Change",
+  "Fine Particle\nFormation",
+  "Fossil Resource\nScarcity",
+  "Water\nConsumption",
+  "Land Use",
+  "Human\nToxicity",
+  "Ozone\nDepletion"
+];
+const radarData = {
+  grey:  [100, 100, 100,  15,  25, 100, 100],
+  blue:  [ 28,  65,  85,  20,  28,  65,  75],
+  green: [  8,  25,  10, 100, 100,  40,  45]
+};
+
+/* ============================================================
+   CHART 1 — Total Impact Bar
+   ============================================================ */
+new Chart(document.getElementById("totalImpactChart"), {
+  type: "bar",
+  data: {
+    labels: CASES,
+    datasets: [{
+      label: "Total Impact (mPt)",
+      data: totalScores,
+      backgroundColor: [COLORS.grey.bg, COLORS.blue.bg, COLORS.green.bg],
+      borderColor:     [COLORS.grey.border, COLORS.blue.border, COLORS.green.border],
+      borderWidth: 2,
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { ...TT,
+        callbacks: { label: ctx => ` ${ctx.parsed.y} mPt` }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { weight:"600" } } },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: "millipoints (mPt)", color:"#64748b", font:{size:11} },
+        grid: { color:"rgba(0,0,0,0.05)" }
+      }
+    }
+  }
+});
+
+/* ============================================================
+   CHART 2 — Grouped Bar by Endpoint Category
+   ============================================================ */
+new Chart(document.getElementById("groupedBarChart"), {
+  type: "bar",
+  data: {
+    labels: ["Human Health", "Ecosystems", "Resources"],
+    datasets: CASES.map((label, i) => ({
+      label,
+      data: [endpointData[["grey","blue","green"][i]][0],
+             endpointData[["grey","blue","green"][i]][1],
+             endpointData[["grey","blue","green"][i]][2]],
+      backgroundColor: C[i].bg,
+      borderColor: C[i].border,
+      borderWidth: 1.5,
+      borderRadius: 4
+    }))
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position:"top", labels:{ boxWidth:12, padding:12 } },
+      tooltip: { ...TT,
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} (norm.)` }
+      }
+    },
+    scales: {
+      x: { grid:{display:false} },
+      y: {
+        beginAtZero: true, max: 110,
+        title: { display:true, text:"Normalised Score (0–100)", color:"#64748b", font:{size:11} },
+        grid: { color:"rgba(0,0,0,0.05)" }
+      }
+    }
+  }
+});
+
+/* ============================================================
+   CHART 3 — Stacked Bar by Life-Cycle Stage
+   ============================================================ */
+const stageColors = ["#f59e0b","#3b82f6","#8b5cf6","#10b981"];
+new Chart(document.getElementById("stackedBarChart"), {
+  type: "bar",
+  data: {
+    labels: CASES,
+    datasets: stages.map((stage, si) => ({
+      label: stage,
+      data: [stageData.grey[si], stageData.blue[si], stageData.green[si]],
+      backgroundColor: stageColors[si] + "bb",
+      borderColor: stageColors[si],
+      borderWidth: 1,
+      stack: "lca",
+      borderRadius: si === stages.length - 1 ? 4 : 0
+    }))
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position:"top", labels:{ boxWidth:12, padding:10 } },
+      tooltip: { ...TT,
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} kg CO₂eq` }
+      }
+    },
+    scales: {
+      x: { stacked: true, grid:{display:false} },
+      y: {
+        stacked: true,
+        title: { display:true, text:"kg CO₂eq / 1000 kg NH₃", color:"#64748b", font:{size:11} },
+        grid: { color:"rgba(0,0,0,0.05)" }
+      }
+    }
+  }
+});
+
+/* ============================================================
+   CHART 4 — Radar Chart
+   ============================================================ */
+new Chart(document.getElementById("radarChart"), {
+  type: "radar",
+  data: {
+    labels: ["Climate\nChange", "Fine Particle\nFormation", "Fossil\nResource", "Water\nConsumption", "Land Use", "Human\nToxicity", "Ozone\nDepletion"],
+    datasets: [
+      {
+        label: "Grey NH₃",
+        data: radarData.grey,
+        borderColor: COLORS.grey.border,
+        backgroundColor: COLORS.grey.bg.replace("99","22"),
+        pointBackgroundColor: COLORS.grey.border,
+        borderWidth: 2, pointRadius: 4
+      },
+      {
+        label: "Blue NH₃",
+        data: radarData.blue,
+        borderColor: COLORS.blue.border,
+        backgroundColor: COLORS.blue.bg.replace("99","22"),
+        pointBackgroundColor: COLORS.blue.border,
+        borderWidth: 2, pointRadius: 4
+      },
+      {
+        label: "Green NH₃",
+        data: radarData.green,
+        borderColor: COLORS.green.border,
+        backgroundColor: COLORS.green.bg.replace("99","22"),
+        pointBackgroundColor: COLORS.green.border,
+        borderWidth: 2, pointRadius: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position:"top", labels:{ boxWidth:12, padding:14 } },
+      tooltip: TT
+    },
+    scales: {
+      r: {
+        beginAtZero: true, max: 100,
+        ticks: { stepSize:20, color:"#94a3b8", font:{size:10} },
+        grid: { color:"rgba(0,0,0,0.08)" },
+        angleLines: { color:"rgba(0,0,0,0.08)" },
+        pointLabels: { font:{size:11}, color:"#374151" }
+      }
+    }
+  }
+});
+
+/* ============================================================
+   CHART 5 — Sankey via Google Charts
+   ============================================================ */
+google.charts.load("current", { packages:["sankey"] });
+google.charts.setOnLoadCallback(drawSankey);
+
+function drawSankey() {
+  const data = new google.visualization.DataTable();
+  data.addColumn("string", "From");
+  data.addColumn("string", "To");
+  data.addColumn("number", "Weight");
+
+  data.addRows([
+    // === GREY NH3 ===
+    ["Natural Gas [Grey]",     "SMR Reformer",          1800],
+    ["Water/Steam [Grey]",     "SMR Reformer",           400],
+    ["SMR Reformer",           "CO₂ Released [Grey]",   1600],
+    ["SMR Reformer",           "N₂ Separation [Grey]",   600],
+    ["N₂ Separation [Grey]",   "Haber-Bosch [Grey]",     580],
+    ["Haber-Bosch [Grey]",     "Grey NH₃ Output",        850],
+    ["Electricity [Grey]",     "Haber-Bosch [Grey]",     200],
+
+    // === BLUE NH3 ===
+    ["Natural Gas [Blue]",     "SMR + CCS",             1800],
+    ["Water/Steam [Blue]",     "SMR + CCS",              400],
+    ["SMR + CCS",              "CO₂ Captured [Blue]",   1440],
+    ["SMR + CCS",              "CO₂ Released [Blue]",    160],
+    ["SMR + CCS",              "N₂ Separation [Blue]",   600],
+    ["N₂ Separation [Blue]",   "Haber-Bosch [Blue]",     580],
+    ["Haber-Bosch [Blue]",     "Blue NH₃ Output",        850],
+    ["Electricity [Blue]",     "Haber-Bosch [Blue]",     200],
+
+    // === GREEN NH3 ===
+    ["Renewable Electricity",  "Electrolyser",          1200],
+    ["Electrolyser",           "H₂ Production",         1100],
+    ["H₂ Production",          "Haber-Bosch [Green]",    600],
+    ["Air Separation",         "Haber-Bosch [Green]",    150],
+    ["Haber-Bosch [Green]",    "Green NH₃ Output",       850],
+    ["Renewable Electricity",  "Air Separation",          80]
+  ]);
+
+  const nodeColors = {
+    "Natural Gas [Grey]":"#9ca3af","Water/Steam [Grey]":"#9ca3af",
+    "SMR Reformer":"#6b7280","CO₂ Released [Grey]":"#ef4444",
+    "N₂ Separation [Grey]":"#6b7280","Haber-Bosch [Grey]":"#4b5563",
+    "Grey NH₃ Output":"#374151","Electricity [Grey]":"#9ca3af",
+
+    "Natural Gas [Blue]":"#93c5fd","Water/Steam [Blue]":"#93c5fd",
+    "SMR + CCS":"#2563eb","CO₂ Captured [Blue]":"#16a34a",
+    "CO₂ Released [Blue]":"#ef4444","N₂ Separation [Blue]":"#3b82f6",
+    "Haber-Bosch [Blue]":"#1d4ed8","Blue NH₃ Output":"#1e3a8a",
+    "Electricity [Blue]":"#93c5fd",
+
+    "Renewable Electricity":"#86efac","Electrolyser":"#22c55e",
+    "H₂ Production":"#16a34a","Air Separation":"#4ade80",
+    "Haber-Bosch [Green]":"#15803d","Green NH₃ Output":"#14532d"
+  };
+
+  const options = {
+    height: 420,
+    sankey: {
+      node: {
+        colors: Object.values(nodeColors),
+        label: { fontSize:11, color:"#1e293b", bold:false },
+        width: 20,
+        nodePadding: 14
+      },
+      link: {
+        colorMode:"gradient",
+        color:{ fill:"#cbd5e1", fillOpacity:0.45 }
+      },
+      iterations: 32
+    }
+  };
+
+  const chart = new google.visualization.Sankey(document.getElementById("sankeyChart"));
+  chart.draw(data, options);
+}
+</script>
+</body>
+</html>
