@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LCA Dashboard — Cradle-to-Gate Ammonia Production Pathways</title>
+
+  <!-- Chart.js for bar, grouped bar, stacked bar, radar charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Plotly.js for the Sankey diagram -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+  <!-- Our custom CSS and JS will be linked separately -->
+  <link rel="stylesheet" href="lca_styles.css" />
+</head>
+<body>
+
+  <!-- ===== STEP 1: HEADER ===== -->
+  <header class="site-header">
+    <div class="header-top">
+      <div class="header-brand">
+        <h1>Cradle-to-Gate LCA Comparison of Ammonia Production Pathways</h1>
+        <p>Master's Thesis Dashboard &middot; ReCiPe 2016 Endpoint (H) &middot; Functional Unit: 1,000 kg NH&#8323;</p>
+      </div>
+      <span class="thesis-badge">LCA Dashboard</span>
+    </div>
+    <nav class="header-nav">
+      <button class="nav-btn active" data-tab="overview">Overview</button>
+      <button class="nav-btn" data-tab="endpoint">Endpoint Analysis</button>
+      <button class="nav-btn" data-tab="lifecycle">Life-Cycle Stages</button>
+      <button class="nav-btn" data-tab="midpoint">Midpoint Trade-offs</button>
+      <button class="nav-btn" data-tab="sankey">Process Flow</button>
+    </nav>
+    <div class="header-accent-bar"></div>
+  </header>
+
+  <!-- ===== STEP 2: BODY LAYOUT (Sidebar + Main) ===== -->
+  <div class="page-layout">
+
+    <!-- SIDEBAR: Study Parameters -->
+    <aside class="sidebar">
+      <h3>Study Parameters</h3>
+      <div class="param-item">
+        <span class="param-label">Functional Unit</span>
+        <span class="param-value">1,000 kg NH&#8323;</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">System Boundary</span>
+        <span class="param-value">Cradle-to-Gate</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">Impact Method</span>
+        <span class="param-value">ReCiPe 2016 Endpoint (H)</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">Allocation Method</span>
+        <span class="param-value">Process Defaults</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">LCA Software</span>
+        <span class="param-value">OpenLCA 2.x</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">Background DB</span>
+        <span class="param-value">ecoinvent 3.9.1</span>
+      </div>
+
+      <hr class="sidebar-divider" />
+
+      <h3>Production Cases</h3>
+      <div class="legend-item"><span class="legend-dot grey"></span><strong>Case A</strong>: Grey Ammonia (SMR)</div>
+      <div class="legend-item"><span class="legend-dot blue"></span><strong>Case B</strong>: Blue Ammonia (SMR + CCS)</div>
+      <div class="legend-item"><span class="legend-dot green"></span><strong>Case C</strong>: Green Ammonia (PEM Electrolysis)</div>
+
+      <hr class="sidebar-divider" />
+
+      <div class="sidebar-note">
+        <strong>Note:</strong> Grey Ammonia data sourced from actual OpenLCA simulation.
+        Blue and Green values are placeholders &mdash; replace with your own LCA results.
+      </div>
+
+      <div class="placeholder-warning">
+        <strong>Placeholder Data</strong>
+        Cases B &amp; C use estimated values. Swap in your actual thesis results
+        in the <code>LCA_DATA</code> object inside <code>lca_data.js</code>.
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+
+      <!-- ========== TAB 1: OVERVIEW ========== -->
+      <section id="tab-overview" class="tab-section active">
+        <div class="tab-header">
+          <h2>Overview &mdash; Total Endpoint Impact Scores</h2>
+          <p>Comparing the weighted single endpoint score per production pathway for 1,000 kg NH&#8323;.</p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-strip">
+          <div class="kpi-card">
+            <div class="kpi-icon grey">A</div>
+            <div class="kpi-text">
+              <span class="kpi-label">Case A &mdash; Grey (SMR)</span>
+              <span class="kpi-value grey-text" id="kpiGrey">--</span>
+              <span class="kpi-sub">Baseline &middot; 100%</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon blue">B</div>
+            <div class="kpi-text">
+              <span class="kpi-label">Case B &mdash; Blue (CCS)</span>
+              <span class="kpi-value blue-text" id="kpiBlue">--</span>
+              <span class="kpi-sub" id="kpiBluePct">--</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon green">C</div>
+            <div class="kpi-text">
+              <span class="kpi-label">Case C &mdash; Green (PEM)</span>
+              <span class="kpi-value green-text" id="kpiGreen">--</span>
+              <span class="kpi-sub" id="kpiGreenPct">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart 1: Total Impact Bar Chart -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <h3>Total Impact Score by Pathway</h3>
+              <div class="subtitle">Normalized weighted single score &middot; ReCiPe 2016 Endpoint (H)</div>
+            </div>
+            <span class="unit-badge">Points (Pt)</span>
+          </div>
+          <div class="chart-body">
+            <div class="chart-wrap h350"><canvas id="totalBarChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Summary Table -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <h3>Impact Summary Table &mdash; All Endpoint Categories</h3>
+              <div class="subtitle">Source: OpenLCA &middot; per 1,000 kg NH&#8323;</div>
+            </div>
+          </div>
+          <div class="chart-body" style="overflow-x:auto;">
+            <table class="data-table" id="summaryTable">
+              <thead>
+                <tr>
+                  <th>Impact Category</th>
+                  <th>Unit</th>
+                  <th>Grey (A) <span class="tag-actual">Actual</span></th>
+                  <th>Blue (B) <span class="tag-placeholder">Placeholder</span></th>
+                  <th>Green (C) <span class="tag-placeholder">Placeholder</span></th>
+                  <th>Best</th>
+                </tr>
+              </thead>
+              <tbody id="summaryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TAB 2: ENDPOINT ANALYSIS ========== -->
+      <section id="tab-endpoint" class="tab-section">
+        <div class="tab-header">
+          <h2>Endpoint Analysis &mdash; Impact by Damage Category</h2>
+          <p>Grouped comparison of the three ReCiPe 2016 Endpoint (H) damage categories.</p>
+        </div>
+
+        <!-- Human Health bar -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <h3>Human Health Impact</h3>
+              <div class="subtitle">Sum of all DALY-weighted midpoint indicators</div>
+            </div>
+            <span class="unit-badge">DALY</span>
+          </div>
+          <div class="chart-body">
+            <div class="chart-wrap h300"><canvas id="hhChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Ecosystems bar -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <h3>Ecosystems Impact</h3>
+                <div class="subtitle">Sum of all species.yr midpoint indicators</div>
+              </div>
+              <span class="unit-badge">species.yr (&times;10&#8315;&#8309;)</span>
+            </div>
+            <div class="chart-body">
+              <div class="chart-wrap h300"><canvas id="ecoChart"></canvas></div>
+            </div>
+          </div>
+          <!-- Resources bar -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div>
+                <h3>Resource Scarcity Impact</h3>
+                <div class="subtitle">Fossil + Mineral resource scarcity</div>
+              </div>
+              <span class="unit-badge">USD2013</span>
+            </div>
+            <div class="chart-body">
+              <div class="chart-wrap h300"><canvas id="resChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grouped normalized bar -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <h3>Grouped Endpoint Comparison (Normalized)</h3>
+              <div class="subtitle">All three damage categories scaled to Grey Ammonia = 100%</div>
+            </div>
+            <span class="unit-badge">% of Grey Ammonia</span>
+          </div>
+          <div class="chart-body">
+            <div class="chart-wrap h350"><canvas id="groupedNormChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TAB 3: LIFE-CYCLE STAGES ========== -->
+      <section id="tab-lifecycle" class="tab-section">
+        <div class="tab-header">
+          <h2>Life-Cycle Stage Contributions</h2>
+          <p>Stacked single-score contributions (Pt) broken down by process stage for each pathway.</p>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <h3>Impact Contribution by Life-Cycle Stage</h3>
+              <div class="subtitle">Stacked bars &mdash; each colour = one process stage</div>
+            </div>
+            <span class="unit-badge">Points (Pt)</span>
+          </div>
+          <div class="chart-body">
+            <div class="chart-wrap h400"><canvas id="stackedChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h3>Case A &mdash; Grey Stage Breakdown</h3>
+              <span class="unit-badge">% share</span>
+            </div>
+            <div class="chart-body">
+              <div class="chart-wrap h280"><canvas id="greyDonut"></canvas></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h3>Case B &mdash; Blue Stage Breakdown</h3>
+              <span class="unit-badge">% share</span>
+            </div>
+            <div class="chart-body">
+              <div class="chart-wrap h280"><canvas id="blueDonut"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TAB 4: MIDPOINT TRADE-OFFS ========== -->
+      <section id="tab-midpoint" class="tab-section">
+        <div class="tab-header">
+          <h2>Midpoint Indicator Trade-offs</h2>
+          <p>Radar chart comparing key midpoint indicators. Values normalized to Grey Ammonia = 100.</p>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <h3>Midpoint Indicator Radar</h3>
+              <div class="subtitle">Normalized to Case A (Grey) = 100 &middot; Larger area = worse impact</div>
+            </div>
+            <span class="unit-badge">Normalized (Grey = 100)</span>
+          </div>
+          <div class="chart-body">
+            <div class="chart-wrap h450"><canvas id="radarChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Midpoint absolute table -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <h3>Key Midpoint Indicators &mdash; Absolute Values</h3>
+              <div class="subtitle">Selected midpoint results per 1,000 kg NH&#8323;</div>
+            </div>
+          </div>
+          <div class="chart-body" style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Midpoint Indicator</th>
+                  <th>Unit</th>
+                  <th>Grey (A)</th>
+                  <th>Blue (B)</th>
+                  <th>Green (C)</th>
+                  <th>Blue vs Grey</th>
+                  <th>Green vs Grey</th>
+                </tr>
+              </thead>
+              <tbody id="midpointTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TAB 5: SANKEY / PROCESS FLOW ========== -->
+      <section id="tab-sankey" class="tab-section">
+        <div class="tab-header">
+          <h2>Process Flow &mdash; Blue Ammonia (SMR + CCS) Cradle-to-Gate</h2>
+          <p>Conceptual Sankey diagram for Case B showing mass/energy flow from feedstock to product.</p>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <h3>Cradle-to-Gate Process Flow &mdash; Blue Ammonia</h3>
+              <div class="subtitle">Flow values in GJ-equivalent per 1,000 kg NH&#8323; &middot; Hover for details</div>
+            </div>
+            <span class="unit-badge">GJ equiv.</span>
+          </div>
+          <div class="chart-body">
+            <div id="sankeyChart" style="width:100%;height:420px;"></div>
+          </div>
+        </div>
+
+        <!-- Process description table -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h3>Process Description &mdash; Blue Ammonia Pathway</h3>
+          </div>
+          <div class="chart-body" style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Stage</th>
+                  <th>Description</th>
+                  <th>Key Input</th>
+                  <th>Key Output</th>
+                  <th>Environmental Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-grey">1. Feedstock</span></td>
+                  <td>Natural Gas Extraction &amp; Processing</td>
+                  <td>CH&#8324; (fossil)</td>
+                  <td>Purified NG</td>
+                  <td>Upstream methane leakage (fugitive emissions)</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-blue">2. Reforming</span></td>
+                  <td>Steam Methane Reforming (SMR) at ~900&deg;C</td>
+                  <td>CH&#8324; + H&#8322;O</td>
+                  <td>Syngas (H&#8322; + CO + CO&#8322;)</td>
+                  <td>Major CO&#8322; generation point (~45% of total)</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-blue">3. Shift</span></td>
+                  <td>Water-Gas Shift Reaction (HTS + LTS)</td>
+                  <td>CO + H&#8322;O</td>
+                  <td>CO&#8322; + H&#8322; (enriched)</td>
+                  <td>Increases H&#8322; yield; additional CO&#8322; produced</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-blue">4. CO&#8322; Capture</span></td>
+                  <td>Amine Scrubbing (MDEA / MEA)</td>
+                  <td>Syngas with CO&#8322;</td>
+                  <td>Pure H&#8322; + CO&#8322; stream</td>
+                  <td>Captures 85&ndash;92% of process CO&#8322;; energy-intensive</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-blue">5. CCS</span></td>
+                  <td>CO&#8322; Compression, Transport &amp; Geological Storage</td>
+                  <td>Captured CO&#8322;</td>
+                  <td>CO&#8322; stored (geological)</td>
+                  <td>Pipeline infrastructure; long-term monitoring</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-grey">6. ASU</span></td>
+                  <td>Cryogenic Air Separation Unit</td>
+                  <td>Atmospheric air</td>
+                  <td>Pure N&#8322; (99.99%)</td>
+                  <td>High electricity demand (~0.2 GJ/tN&#8322;)</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-green">7. Synthesis</span></td>
+                  <td>Haber&ndash;Bosch Loop (150&ndash;300 bar, Fe catalyst)</td>
+                  <td>H&#8322; + N&#8322;</td>
+                  <td>NH&#8323; (anhydrous)</td>
+                  <td>High pressure/temperature; recycle loop losses</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <span>LCA Dashboard &middot; Cradle-to-Gate Ammonia &middot; ReCiPe 2016 Endpoint (H) &middot; FU: 1,000 kg NH&#8323;</span>
+    <span>Grey: Actual OpenLCA &middot; Blue &amp; Green: Placeholder &middot; Chart.js 4.4 &middot; Plotly 2.27</span>
+  </footer>
+
+  <!-- ===== SCRIPTS (loaded in order) ===== -->
+  <script src="lca_data.js"></script>
+  <script src="lca_charts.js"></script>
+  <script src="lca_app.js"></script>
+</body>
+</html>
